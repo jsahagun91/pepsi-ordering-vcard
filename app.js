@@ -14,6 +14,22 @@ installBtn?.addEventListener('click', async () => {
   installBtn.hidden = true;
 });
 
+// Preload Pepsi logo as data URI for vCard photo
+let photoDataUri = '';
+async function loadPhoto() {
+  try {
+    const res = await fetch('assets/Pepsi_2023.svg');
+    if (!res.ok) return;
+    const svgText = await res.text();
+    // Encode SVG to base64 safely for inclusion in vCard
+    const base64 = btoa(unescape(encodeURIComponent(svgText)));
+    photoDataUri = `data:image/svg+xml;base64,${base64}`;
+  } catch (err) {
+    console.error('Failed to load Pepsi logo for vCard photo', err);
+  }
+}
+loadPhoto();
+
 // Clone account block
 const accountsContainer = document.getElementById('accounts');
 document.getElementById('addAccount').addEventListener('click', () => {
@@ -63,8 +79,13 @@ function buildVCard(data) {
   lines.push('FN:Pepsi Ordering');
   lines.push('ORG:PepsiCo');
   lines.push('TITLE:Ordering & Equipment Support');
-  lines.push('TEL;TYPE=WORK,VOICE:1-800-963-2424'); // Ordering
-  lines.push('TEL;TYPE=WORK,VOICE:1-800-555-4784'); // Repair
+  if (photoDataUri) {
+    lines.push(`PHOTO;VALUE=URI:${photoDataUri}`);
+  }
+  lines.push('item1.TEL;TYPE=VOICE:1-800-963-2424'); // Ordering
+  lines.push('item1.X-ABLabel:Ordering');
+  lines.push('item2.TEL;TYPE=VOICE:1-800-555-4784'); // Repair
+  lines.push('item2.X-ABLabel:Equipment Repair');
   lines.push('EMAIL;TYPE=WORK:orders@pepsico.com');
   lines.push('URL;TYPE=WORK:https://pepsicopartners.com');
 
@@ -91,6 +112,16 @@ function buildVCard(data) {
   return lines.join('\r\n');
 }
 
+function downloadVCard(vcf, filename = 'Pepsi-Ordering.vcf') {
+  const blob = new Blob([vcf], { type: 'text/vcard;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 form.addEventListener('submit', (e) => {
   e.preventDefault();
   const formData = new FormData(form);
@@ -113,15 +144,8 @@ form.addEventListener('submit', (e) => {
   resultSection.hidden = false;
 
   // Download handler
-  downloadBtn.onclick = () => {
-    const blob = new Blob([vcf], { type: 'text/vcard;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'Pepsi-Ordering.vcf';
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+  downloadBtn.onclick = () => downloadVCard(vcf);
+  downloadVCard(vcf);
 
   copyBtn.onclick = async () => {
     try {
