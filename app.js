@@ -115,8 +115,8 @@ function buildVCard(data) {
   lines.push('item1.X-ABLabel:Ordering');
   lines.push('item2.TEL;TYPE=VOICE:1-800-555-4784'); // Repair
   lines.push('item2.X-ABLabel:Equipment Repair');
-  lines.push('EMAIL;TYPE=WORK:orders@pepsico.com');
-  lines.push('URL;TYPE=WORK:https://pepsicopartners.com');
+  lines.push('EMAIL;TYPE=EMAIL ORDERING:orders@pepsico.com');
+  lines.push('URL;TYPE=ONLINE ORDERING:https://pepsicopartners.com');
 
   // Notes per account
   data.accounts.forEach((acc, idx) => {
