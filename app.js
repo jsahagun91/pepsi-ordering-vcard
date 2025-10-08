@@ -14,21 +14,43 @@ installBtn?.addEventListener('click', async () => {
   installBtn.hidden = true;
 });
 
-// Preload Pepsi logo as data URI for vCard photo
-let photoDataUri = '';
+// Preload Pepsi logo as PNG base64 for vCard photo
+let photoBase64 = '';
 async function loadPhoto() {
   try {
     const res = await fetch('assets/Pepsi_2023.svg');
     if (!res.ok) return;
     const svgText = await res.text();
-    // Encode SVG to base64 safely for inclusion in vCard
-    const base64 = btoa(unescape(encodeURIComponent(svgText)));
-    photoDataUri = `data:image/svg+xml;base64,${base64}`;
+    // Convert SVG to PNG via canvas so contact apps display it reliably
+    const svgBase64 = btoa(unescape(encodeURIComponent(svgText)));
+    const img = new Image();
+    img.src = `data:image/svg+xml;base64,${svgBase64}`;
+    await new Promise((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = reject;
+      if (img.complete && img.naturalWidth) resolve();
+    });
+
+    const canvasSize = 512;
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = canvasSize;
+    const ctx = canvas.getContext('2d');
+    const naturalWidth = img.naturalWidth || canvasSize;
+    const naturalHeight = img.naturalHeight || canvasSize;
+    const scale = Math.min(canvasSize / naturalWidth, canvasSize / naturalHeight);
+    const drawWidth = naturalWidth * scale;
+    const drawHeight = naturalHeight * scale;
+    const dx = (canvasSize - drawWidth) / 2;
+    const dy = (canvasSize - drawHeight) / 2;
+    ctx.clearRect(0, 0, canvasSize, canvasSize);
+    ctx.drawImage(img, dx, dy, drawWidth, drawHeight);
+    photoBase64 = canvas.toDataURL('image/png').split(',')[1];
   } catch (err) {
     console.error('Failed to load Pepsi logo for vCard photo', err);
   }
+  return photoBase64;
 }
-loadPhoto();
+const photoReady = loadPhoto();
 
 // Clone account block
 const accountsContainer = document.getElementById('accounts');
@@ -69,6 +91,7 @@ const resultSection = document.getElementById('result');
 const vcardPre = document.getElementById('vcardText');
 const downloadBtn = document.getElementById('downloadBtn');
 const copyBtn = document.getElementById('copyBtn');
+const shareBtn = document.getElementById('shareBtn');
 
 function buildVCard(data) {
   // vCard 3.0
@@ -79,15 +102,23 @@ function buildVCard(data) {
   lines.push('FN:Pepsi Ordering');
   lines.push('ORG:PepsiCo');
   lines.push('TITLE:Ordering & Equipment Support');
-  if (photoDataUri) {
-    lines.push(`PHOTO;VALUE=URI:${photoDataUri}`);
+  if (photoBase64) {
+    const prefix = 'PHOTO;ENCODING=b;TYPE=PNG:';
+    const firstChunkLength = Math.max(0, 75 - prefix.length);
+    const firstChunk = photoBase64.slice(0, firstChunkLength);
+    lines.push(prefix + firstChunk);
+    let offset = firstChunkLength;
+    while (offset < photoBase64.length) {
+      lines.push(' ' + photoBase64.slice(offset, offset + 75));
+      offset += 75;
+    }
   }
   lines.push('item1.TEL;TYPE=VOICE:1-800-963-2424'); // Ordering
   lines.push('item1.X-ABLabel:Ordering');
   lines.push('item2.TEL;TYPE=VOICE:1-800-555-4784'); // Repair
   lines.push('item2.X-ABLabel:Equipment Repair');
-  lines.push('EMAIL;TYPE=WORK:orders@pepsico.com');
-  lines.push('URL;TYPE=WORK:https://pepsicopartners.com');
+  lines.push('EMAIL;TYPE=Email Ordering:orders@pepsico.com');
+  lines.push('URL;TYPE=Order Online:https://pepsicopartners.com');
 
   // Notes per account
   data.accounts.forEach((acc, idx) => {
@@ -122,8 +153,13 @@ function downloadVCard(vcf, filename = 'Pepsi-Ordering.vcf') {
   URL.revokeObjectURL(url);
 }
 
-form.addEventListener('submit', (e) => {
+form.addEventListener('submit', async (e) => {
   e.preventDefault();
+  try {
+    await photoReady;
+  } catch (err) {
+    console.warn('Continuing without contact photo', err);
+  }
   const formData = new FormData(form);
   const bizName = formData.get('bizName');
   const accounts = [];
@@ -142,10 +178,36 @@ form.addEventListener('submit', (e) => {
   const vcf = buildVCard({ bizName, accounts });
   vcardPre.textContent = vcf;
   resultSection.hidden = false;
+  if (shareBtn) shareBtn.hidden = !navigator.share;
 
   // Download handler
   downloadBtn.onclick = () => downloadVCard(vcf);
   downloadVCard(vcf);
+
+  if (shareBtn && navigator.share) {
+    shareBtn.onclick = async () => {
+      try {
+        const file = new File([vcf], 'Pepsi-Ordering.vcf', { type: 'text/vcard' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: 'Pepsi Ordering Contact',
+            text: 'Pepsi Ordering & Equipment Support'
+          });
+        } else {
+          await navigator.share({
+            title: 'Pepsi Ordering Contact',
+            text: vcf
+          });
+        }
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          console.error('Share failed', err);
+          alert('Sharing failed. Try copying the text instead.');
+        }
+      }
+    };
+  }
 
   copyBtn.onclick = async () => {
     try {
@@ -161,4 +223,5 @@ document.getElementById('resetBtn').addEventListener('click', () => {
   const all = accountsContainer.querySelectorAll('.account');
   all.forEach((node, idx) => { if (idx > 0) node.remove(); });
   resultSection.hidden = true;
+  if (shareBtn) shareBtn.hidden = true;
 });
