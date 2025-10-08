@@ -13,6 +13,7 @@ h2{font-size:1.1rem;margin:0 0 .5rem}
 .two-col{display:grid;grid-template-columns:1fr;gap:.75rem}
 @media(min-width:600px){.two-col{grid-template-columns:1fr 1fr}}
 .checkbox{display:flex;gap:.5rem;align-items:center;font-weight:500}
+.checkbox input{flex-shrink:0}
 .actions{display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1rem}
 .actions-row{display:flex;justify-content:flex-end;margin:.3rem 0}
 .btn{appearance:none;border:none;background:#0b61fd;color:#fff;padding:.75rem 1rem;border-radius:12px;font-weight:700}
@@ -24,3 +25,19 @@ h2{font-size:1.1rem;margin:0 0 .5rem}
 .bullet{margin:.25rem 0 .5rem 1.25rem}
 .codewrap{max-height:220px;overflow:auto;background:#0b0b0b;color:#d7ffd7;border-radius:12px;padding:.75rem}
 hr{border:none;border-top:1px solid #eee;margin:1rem 0}
+@media(max-width:480px){.app-header{padding:.6rem .85rem;gap:.5rem}
+.logo{width:2.1rem;height:2.1rem}
+.titles h1{font-size:1rem}
+.subtitle{font-size:.8rem}
+.container{margin:.75rem auto;padding:0 .75rem}
+.card{padding:.85rem .75rem;border-radius:14px}
+.field{margin:.6rem 0}
+.field label{font-size:.9rem}
+.field input{padding:.65rem;font-size:.95rem}
+.actions{flex-direction:column;align-items:stretch;gap:.5rem}
+.actions .btn,.actions .btn-outline{width:100%}
+.actions-row{margin:.5rem 0}
+.actions-row .btn{width:100%}
+.checkbox{align-items:flex-start;font-size:.9rem;line-height:1.3}
+.checkbox input{margin-top:.15rem}
+.bullet{margin:.25rem 0 .5rem 1rem}}
