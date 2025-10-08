@@ -88,9 +88,7 @@ wireThirdPartyToggles();
 // Generate vCard
 const form = document.getElementById('vcardForm');
 const resultSection = document.getElementById('result');
-const vcardPre = document.getElementById('vcardText');
 const downloadBtn = document.getElementById('downloadBtn');
-const copyBtn = document.getElementById('copyBtn');
 const shareBtn = document.getElementById('shareBtn');
 
 function buildVCard(data) {
@@ -117,8 +115,8 @@ function buildVCard(data) {
   lines.push('item1.X-ABLabel:Ordering');
   lines.push('item2.TEL;TYPE=VOICE:1-800-555-4784'); // Repair
   lines.push('item2.X-ABLabel:Equipment Repair');
-  lines.push('EMAIL;TYPE=Email Ordering:orders@pepsico.com');
-  lines.push('URL;TYPE=Order Online:https://pepsicopartners.com');
+  lines.push('EMAIL;TYPE=WORK:orders@pepsico.com');
+  lines.push('URL;TYPE=WORK:https://pepsicopartners.com');
 
   // Notes per account
   data.accounts.forEach((acc, idx) => {
@@ -176,16 +174,18 @@ form.addEventListener('submit', async (e) => {
   });
 
   const vcf = buildVCard({ bizName, accounts });
-  vcardPre.textContent = vcf;
   resultSection.hidden = false;
-  if (shareBtn) shareBtn.hidden = !navigator.share;
+  if (shareBtn) shareBtn.hidden = false;
 
   // Download handler
   downloadBtn.onclick = () => downloadVCard(vcf);
-  downloadVCard(vcf);
 
-  if (shareBtn && navigator.share) {
+  if (shareBtn) {
     shareBtn.onclick = async () => {
+      if (!navigator.share) {
+        alert('Sharing is not supported in this browser. Try downloading the contact and texting it manually.');
+        return;
+      }
       try {
         const file = new File([vcf], 'Pepsi-Ordering.vcf', { type: 'text/vcard' });
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -203,19 +203,12 @@ form.addEventListener('submit', async (e) => {
       } catch (err) {
         if (err.name !== 'AbortError') {
           console.error('Share failed', err);
-          alert('Sharing failed. Try copying the text instead.');
+          alert('Sharing failed. Try downloading the contact instead.');
         }
       }
     };
   }
 
-  copyBtn.onclick = async () => {
-    try {
-      await navigator.clipboard.writeText(vcf);
-      copyBtn.textContent = 'Copied!';
-      setTimeout(() => (copyBtn.textContent = 'Copy text'), 1500);
-    } catch { alert('Copy failed'); }
-  };
 });
 
 document.getElementById('resetBtn').addEventListener('click', () => {
