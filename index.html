@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pepsi Ordering vCard</title>
+  <meta name="theme-color" content="#0b61fd">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icons/pepsi-192.png">
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <header class="app-header">
+    <div class="logo">
+      <img src="assets/Pepsi_2023.svg" alt="Pepsi logo">
+    </div>
+    <div class="titles">
+      <h1>Pepsi Ordering vCard</h1>
+      <p class="subtitle">Create a contact card in seconds</p>
+    </div>
+    <button id="installBtn" class="btn btn-outline" hidden>Install</button>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h2>Required info</h2>
+      <form id="vcardForm">
+        <div class="field">
+          <label for="bizName">Business name</label>
+          <input id="bizName" name="bizName" type="text" placeholder="e.g., Nozzleman Pizza Carson" required>
+        </div>
+
+        <div id="accounts">
+          <div class="account fieldset">
+            <div class="field two-col">
+              <div>
+                <label>Account number</label>
+                <input name="account[]" type="text" inputmode="numeric" placeholder="#6510801" required>
+              </div>
+              <div>
+                <label>Nickname (optional)</label>
+                <input name="nickname[]" type="text" placeholder="e.g., Main store">
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Ordering note (optional)</label>
+              <input name="orderNote[]" type="text" placeholder="Check CO₂ before ordering">
+            </div>
+
+            <div class="field two-col conditional">
+              <div>
+                <label>Ordering day (optional)</label>
+                <input name="orderingDay[]" type="text" placeholder="e.g., Wed before 2:30pm">
+              </div>
+              <div>
+                <label>Delivery day (optional)</label>
+                <input name="deliveryDay[]" type="text" placeholder="e.g., Friday">
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="checkbox">
+                <input class="thirdPartyToggle" type="checkbox">
+                Customer orders via 3rd‑party or has no set delivery/order day
+              </label>
+            </div>
+            <hr>
+          </div>
+        </div>
+
+        <div class="actions-row">
+          <button type="button" id="addAccount" class="btn btn-secondary">+ Add another account</button>
+        </div>
+
+        <h2>Pepsi Ordering & Support</h2>
+        <p class="hint">These are included automatically in the contact.</p>
+        <ul class="bullet">
+          <li>Ordering phone: <a href="tel:18009632424">1‑800‑963‑2424</a></li>
+          <li>Online ordering: <a href="https://pepsicopartners.com">pepsicopartners.com</a></li>
+          <li>Email orders: <a href="mailto:orders@pepsico.com">orders@pepsico.com</a></li>
+          <li>Equipment Repair: <a href="tel:18005554784">1‑800‑555‑4784</a></li>
+        </ul>
+
+        <div class="actions">
+          <button class="btn" type="submit">Generate vCard</button>
+          <button class="btn btn-outline" type="reset" id="resetBtn">Reset</button>
+        </div>
+      </form>
+    </section>
+
+    <section id="result" class="card" hidden>
+      <h2>Your vCard is ready</h2>
+      <p>Tap download and add to your phone’s contacts.</p>
+      <div class="codewrap"><pre id="vcardText" aria-label="vCard preview"></pre></div>
+      <div class="actions">
+        <button id="downloadBtn" class="btn">Download .vcf</button>
+        <button id="copyBtn" class="btn btn-outline">Copy text</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">Made for field reps • Works offline • PWA</footer>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js');
+      });
+    }
+  </script>
+</body>
+</html>
